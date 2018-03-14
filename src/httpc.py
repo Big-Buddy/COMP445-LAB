@@ -27,6 +27,8 @@ def get(args):
 	path = "/" if len(url.path) < 1 else url.path
 	query = "" if len(url.query) < 1 else "?" + url.query
 
+	if(not host):
+		host = socket.gethostbyname(socket.gethostname())
 	#resolving header
 	headers = args["-h"]
 	header = "Host: "+ str(host)
@@ -37,10 +39,10 @@ def get(args):
 	#making the request
 	request = "GET "+path+query+" HTTP/1.0\r\n"+header+"\r\n\r\n"
 	request = request.encode('utf-8')
-
+	
 	#sending the request
 	s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((host, 80))
+	s.connect((host, 8080))
 	s.send(request)
 	result = s.recv(10000)
 	s.close()
@@ -90,7 +92,7 @@ def post(args):
 
 	#sending the request
 	s=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((host, 80))
+	s.connect((host, 8080))
 	s.send(request)
 	result = s.recv(10000)
 	s.close()
