@@ -17,7 +17,7 @@ import json
 import os
 import threading
 
-def run_server(port):
+def run_server(port, dir_path):
     print('Server hosted by', socket.gethostname())
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -37,17 +37,51 @@ def handle_client(conn, addr):
             data = conn.recv(1024)
             if not data:
                 break
-            ##SERVE THE REQUEST
-            # IF GET return all files @ dir_path
+            request = data.decode()
 
-            # IF GET W/ FILENAME return the content of file RETURN ERROR IF FILE DNE
+            request_buffer = request.split("\n\n")
+            if(not(len(request_buffer) > 1)):
+                request_buffer = request.split("\r\n")
+            print(request_buffer)
+            method = request_buffer[0]
+            response = ""
 
-            # IF POST W/ FILENAME create new file with that name OR overwrite existing file with content body of request
+            file_flag = False
 
-            ##SEND BACK THE RESPONSE
-            conn.sendall(data)
+            for x in request_buffer:
+                    if("file" in x):
+                        file_flag = True
+                        file_name = x[7:]
+
+            if("POST" in method):
+                write_data = request_buffer[len(request_buffer)-1]
+                response = post(dir_path, file_name, write_data)
+            elif("GET" in method):
+                if(file_flag):
+                    #response = get_file_content(dir_path, file_name)
+                else:
+                    #response = get_dir_list(dir_path)
+                    
+            conn.sendall(response.encode())
     finally:
         conn.close()
+
+
+def get_dir_list(dir_path):
+    file_list_text = ''
+    for filesnames in os.walk(dirpath):
+        for filename in filenames:
+            list_text.append(filename + '\n')
+    return file_list_text
+
+def get_file_content(dir_path, file_name):
+    f = open(dir_path+file_name, 'r')
+    file_content = f.read()
+    return file_content
+
+def post(dir_path, file_name, write_data):
+    f = open(dir_path+file_name, 'w')
+    f.write(write_data)
 
 if __name__ == '__main__':
 	arguments = docopt(__doc__, help=False, version='1.0.0rc2')
@@ -61,6 +95,6 @@ if __name__ == '__main__':
 	if(arguments["-d"]):
 		dir_path = arguments["-d"]
     
-	run_server(port)	
+	run_server(port, dir_path)	
 
 	print(arguments)
