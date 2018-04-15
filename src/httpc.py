@@ -29,6 +29,7 @@ def get(args):
 
 	if(not host):
 		host = socket.gethostbyname(socket.gethostname())
+	print(host)
 	#resolving header
 	headers = args["-h"]
 	header = "Host: "+ str(host)

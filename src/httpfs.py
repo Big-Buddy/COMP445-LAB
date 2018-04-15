@@ -39,7 +39,8 @@ def handle_client(conn, addr):
                 break
             ##SERVE THE REQUEST
             # IF GET return all files @ dir_path
-
+            data = data.json()
+            print(data)
             # IF GET W/ FILENAME return the content of file RETURN ERROR IF FILE DNE
 
             # IF POST W/ FILENAME create new file with that name OR overwrite existing file with content body of request
@@ -50,17 +51,17 @@ def handle_client(conn, addr):
         conn.close()
 
 if __name__ == '__main__':
-	arguments = docopt(__doc__, help=False, version='1.0.0rc2')
-
-	port = 8080
-	dir_path = os.getcwd()
-	
-	##Overwrite defaults if necessary
-	if(arguments["-p"]):
-		port = int(arguments["-p"])
-	if(arguments["-d"]):
-		dir_path = arguments["-d"]
+    arguments = docopt(__doc__, help=False, version='1.0.0rc2')
+    port = 8080
+    dir_path = os.getcwd()
     
-	run_server(port)	
 
-	print(arguments)
+    ##Overwrite defaults if necessary
+    if(arguments["-p"]):
+        port = int(arguments["-p"])
+    if(arguments["-d"]):
+        dir_path = arguments["-d"]
+
+    run_server(port)	
+
+    print(arguments)
