@@ -29,7 +29,7 @@ def get(args):
 
 	if(not host):
 		host = socket.gethostbyname(socket.gethostname())
-	print(host)
+
 	#resolving header
 	headers = args["-h"]
 	header = "Host: "+ str(host)
@@ -70,6 +70,9 @@ def post(args):
 	path = "/" if len(url.path) < 1 else url.path
 	query = "" if len(url.query) < 1 else "?" + url.query
 
+	if(not host):
+		host = socket.gethostbyname(socket.gethostname())
+
 	#resolving header
 	headers = args["-h"]
 	header = "Host: "+ str(host)
@@ -84,8 +87,6 @@ def post(args):
 		with open(args["-f"]) as f:
 			data = f.read()
 	datalength = len(data)
-	print(data)
-	print(datalength)
 
 	#making the request
 	request = "POST "+path+query+" HTTP/1.0\r\n"+header+"\r\nContent-Length: "+str(datalength)+"\r\n\r\n"+data
@@ -126,7 +127,6 @@ if __name__ == '__main__':
     
     #delete this once you feel everything works. purely for debugging
     ##print(arguments)
-
 
     #Do the actual GET/POST and get the response
     response = ""

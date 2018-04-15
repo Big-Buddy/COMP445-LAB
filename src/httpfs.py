@@ -17,7 +17,7 @@ import json
 import os
 import threading
 
-def run_server(port):
+def run_server(port, dir_path, verbosity):
     print('Server hosted by', socket.gethostname())
     listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -26,35 +26,100 @@ def run_server(port):
         print('Server is listening at', port)
         while True:
             conn, addr = listener.accept()
-            threading.Thread(target=handle_client, args=(conn, addr)).start()
+            threading.Thread(target=handle_client, args=(conn, addr, verbosity)).start()
     finally:
         listener.close()
 
-def handle_client(conn, addr):
+def handle_client(conn, addr, verbosity):
     print('New client from', addr)
     try:
         while True:
             data = conn.recv(1024)
             if not data:
                 break
-            ##SERVE THE REQUEST
-            # IF GET return all files @ dir_path
-            data = data.json()
-            print(data)
-            # IF GET W/ FILENAME return the content of file RETURN ERROR IF FILE DNE
+            request = data.decode()
 
-            # IF POST W/ FILENAME create new file with that name OR overwrite existing file with content body of request
+            request_buffer = request.split("\n\n")
+            if(not(len(request_buffer) > 1)):
+                request_buffer = request.split("\r\n")
+            method = request_buffer[0]
+            response = ""
 
-            ##SEND BACK THE RESPONSE
-            conn.sendall(data)
+            file_flag = False
+            file_name = ''
+
+            for x in request_buffer:
+                    if("file" in x):
+                        file_flag = True
+                        file_name = x[6:]
+
+            if(verbosity):
+                print("Request: " + method + " " + file_name)
+
+            if(insecure_path(file_name)):
+                response = "HTTP/1.0 403 FORBIDDEN\r\n" + "Content-Type: text\r\n\r\nThe directory you are trying to access is outside the working directory of the server. Access denied.\r\n"
+                if(verbosity): print("Bad user ;-)")
+            elif("POST" in method):
+                write_data = request_buffer[len(request_buffer)-1]
+                response = post(dir_path, file_name, write_data)
+                if(verbosity):
+                    if("403" in response):
+                        print("Bad user ;-)")
+                    else:
+                        print("Good user!")
+            elif("GET" in method):
+                if(file_flag):
+                    response = get_file_content(dir_path, file_name)
+                    if(verbosity):
+                        if("403" in response):
+                            print("Bad user ;-)")
+                        elif("404" in response):
+                            print("Confused user!")
+                        else:
+                            print("Good user!")
+                else:
+                    response = get_dir_list(dir_path)
+                    if(verbosity): print("Good user!")
+
+            conn.sendall(response.encode('utf-8'))
     finally:
         conn.close()
+
+
+def get_dir_list(dir_path):
+    file_list_text = ''
+    files = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+    for f in files:
+        file_list_text = file_list_text + f + '\n'
+    return "HTTP/1.0 200 OK\r\n" + "Content-Type: text\r\n\r\n" + file_list_text + "\r\n"
+
+def get_file_content(dir_path, file_name):
+    try:
+        f = open(dir_path+file_name, 'r')
+    except FileNotFoundError:
+        return "HTTP/1.0 404 NOT FOUND\r\n" + "Content-Type: text/html\r\n\r\nThat file does not exist.\r\n"
+    else:
+        file_content = f.read()
+        return "HTTP/1.0 200 OK\r\n" + "Content-Type: text\r\n\r\n" + file_content + "\r\n"
+
+def post(dir_path, file_name, write_data):
+    f = open(dir_path+file_name, 'w')
+    f.write(write_data)
+    raw_response = "target-directory: " + dir_path + '\n' + "target-file: " + file_name + '\n' + "data: " + write_data + '\n'
+    return "HTTP/1.0 200 OK\r\n" + "Content-Type: text\r\n\r\n" + raw_response + "\r\n"
+
+def insecure_path(file_name):
+    insecure = False
+    if("/.." in file_name):
+        insecure = True
+    return insecure
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, help=False, version='1.0.0rc2')
     port = 8080
     dir_path = os.getcwd()
     
+<<<<<<< HEAD
 
     ##Overwrite defaults if necessary
     if(arguments["-p"]):
@@ -65,3 +130,6 @@ if __name__ == '__main__':
     run_server(port)	
 
     print(arguments)
+=======
+	run_server(port, dir_path, arguments["-v"])	
+>>>>>>> 07411e41e85b939eaefe309f214051a6686d7245
