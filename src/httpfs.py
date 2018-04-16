@@ -119,17 +119,4 @@ if __name__ == '__main__':
     port = 8080
     dir_path = os.getcwd()
     
-<<<<<<< HEAD
-
-    ##Overwrite defaults if necessary
-    if(arguments["-p"]):
-        port = int(arguments["-p"])
-    if(arguments["-d"]):
-        dir_path = arguments["-d"]
-
-    run_server(port)	
-
-    print(arguments)
-=======
 	run_server(port, dir_path, arguments["-v"])	
->>>>>>> 07411e41e85b939eaefe309f214051a6686d7245
