@@ -17,7 +17,7 @@ def sender(user_name, ip_address,port):
 def receiver(port):
 	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	server_address = ('', port)
-	s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+	sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 	sock.bind(server_address)
 
 	while(True):
