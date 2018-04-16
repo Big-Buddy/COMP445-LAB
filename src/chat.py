@@ -31,7 +31,8 @@ def receiver(port):
 	while(True):
 		data, address = sock.recvfrom(1024)
 		message = json.loads(data.decode())
-		print(parse_message(message))
+		if (message['user_message']):
+			print(parse_message(message))
 
 def build_message(user_message, user_name):
 	if (user_message == '/leave'):
