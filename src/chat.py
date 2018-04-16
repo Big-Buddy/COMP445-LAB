@@ -31,7 +31,7 @@ def receiver(port):
 	while(True):
 		data, address = sock.recvfrom(1024)
 		message = json.loads(data.decode())
-		if (message['user_message']):
+		if (message['command']):
 			print(parse_message(message))
 
 def build_message(user_message, user_name):
@@ -44,7 +44,7 @@ def build_message(user_message, user_name):
 		if(user_name):
 			return {'user_name' : user_name, 'command' : 'TALK', 'user_message' : user_message}
 		else:
-			print('\nYou need a username to chat, please /join')
+			print('You need a username to chat, please /join')
 			return {'user_name' : '', 'command' : '', 'user_message' : ''}
 
 def parse_message(message):
