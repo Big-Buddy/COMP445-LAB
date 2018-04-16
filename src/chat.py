@@ -1,5 +1,4 @@
 import socket
-import sys
 import json
 import threading
 import datetime as dt
@@ -25,7 +24,7 @@ def receiver(port):
 		message = json.loads(data.decode())
 		print(str(dt.datetime.now()) + " [" + message['user_name'] + "] " + message['user_message'])
 
-port = int(sys.argv[1])
+port = 10000
 
 threading.Thread(target=receiver, args=(port,)).start()
 
