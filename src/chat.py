@@ -56,8 +56,14 @@ class sender(threading.Thread):
 			return {'user_name' : self.user_name, 'command' : 'QUIT', 'user_message' : ''}
 		elif(user_message == '/who'):
 			return {'user_name' : self.user_name, 'command' : 'WHO', 'user_message' : ''}
+		elif(user_message == '/ping'):
+			return {'user_name' : self.user_name, 'command' : 'PING', 'user_message' : ''}
 		else:
 			return {'user_name' : self.user_name, 'command' : 'TALK', 'user_message' : user_message}
+
+	def ping(self, sock):
+		ping = sender.build_message('/ping')
+		sock.sendto(ping, (self.ip, self.port))
 
 class receiver(threading.Thread):
 	def __init__(self, port):
@@ -80,6 +86,9 @@ class receiver(threading.Thread):
 				print('Bye!')
 				sender.kill()
 				receiver.kill()
+			elif (message['command'] == 'PING'):
+				self.users.add(message['user_name'])
+				sender.ping(sock)
 			else:
 				print(receiver.parse_message(message))
 			
