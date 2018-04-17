@@ -2,64 +2,106 @@ import socket
 import json
 import threading
 import datetime as dt
+import time
 
-def sender(ip_address,port):
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	server_address = (ip_address, port)
-	sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,1)
-	
-	user_name = ''
+class sender(threading.Thread):
+	def __init__(self, ip, port):
+			threading.Thread.__init__(self)
+			self.running = 1
+			self.port = port
+			self.user_name = ''
+			self.ip = ip
+			self.joined = False
 
-	while(True):
-		user_message = input()
-		message = json.dumps(build_message(user_message, user_name))
+	def run(self):
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		server_address = (self.ip, self.port)
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,1)
 
-		check = json.loads(message)
-		if (check['command'] == 'LEAVE'):
-			user_name = ''
-		elif(check['command'] == 'JOIN'):
-			user_name = json.loads(message)['user_name']
+		while(self.running == 1):
+			if (self.joined == False):
+				self.user_name = input('Enter your username: ')
+				self.joined = True
+				init_message = json.dumps(sender.build_message('/join'))
+				sock.sendto(init_message.encode(), server_address)
 
-		sent = sock.sendto(message.encode(), server_address)
+			user_message = input()
 
-def receiver(port):
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	server_address = ('', port)
-	sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-	sock.bind(server_address)
+			if(user_message):
+				if(user_message == '/leave'):
+					message = json.dumps(sender.build_message(user_message))
+					quitting = json.dumps(sender.build_message('/quit'))
 
-	while(True):
-		data, address = sock.recvfrom(1024)
-		message = json.loads(data.decode())
-		if (message['command']):
-			print(parse_message(message))
+					sock.sendto(message.encode(), server_address)
+					sock.sendto(quitting.encode(), ('localhost', port))
+				else:
+					message = json.dumps(sender.build_message(user_message))
 
-def build_message(user_message, user_name):
-	if (user_message == '/leave'):
-		return {'user_name' : user_name, 'command' : 'LEAVE', 'user_message' : ''}
-	elif(user_message == '/join'):
-		new_user_name = input('Enter your new username: ')
-		return {'user_name' : new_user_name, 'command' : 'JOIN', 'user_message' : ''}
-	else:
-		if(user_name):
-			return {'user_name' : user_name, 'command' : 'TALK', 'user_message' : user_message}
+					sock.sendto(message.encode(), server_address)
+
+			time.sleep(0)
+
+	def kill(self):
+		self.running = 0
+
+	def build_message(self, user_message):
+		if (user_message == '/leave'):
+			return {'user_name' : self.user_name, 'command' : 'LEAVE', 'user_message' : ''}
+		elif(user_message == '/join'):
+			return {'user_name' : self.user_name, 'command' : 'JOIN', 'user_message' : ''}
+		elif(user_message == '/quit'):
+			return {'user_name' : self.user_name, 'command' : 'QUIT', 'user_message' : ''}
 		else:
-			print('You need a username to chat, please /join')
-			return {'user_name' : '', 'command' : '', 'user_message' : ''}
+			return {'user_name' : self.user_name, 'command' : 'TALK', 'user_message' : user_message}
 
-def parse_message(message):
-	command = message['command']
-	user_name = message['user_name']
-	user_message = message['user_message']
+class receiver(threading.Thread):
+	def __init__(self, port):
+		threading.Thread.__init__(self)
+		self.running = 1
+		self.port = port
+		self.user_list = set()
 
-	return {
-		'TALK' : str(dt.datetime.now()) + ' [' + user_name + ']: ' + user_message,
-		'JOIN' : str(dt.datetime.now()) + ' ' + user_name + ' has joined',
-		'LEAVE' : user_name + ' has left the chat'
-	}.get(command, '')
+	def run(self):
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		server_address = ('', self.port)
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+		sock.bind(server_address)
 
+		while(self.running == 1):
+			data, address = sock.recvfrom(1024)
+			message = json.loads(data.decode())
+
+			if (message['command'] == 'QUIT'):
+				print('Bye!')
+				sender.kill()
+				receiver.kill()
+			else:
+				print(receiver.parse_message(message))
+			
+			time.sleep(0)
+
+	def kill(self):
+		self.running = 0
+
+	def parse_message(self, message):
+		command = message['command']
+		user_name = message['user_name']
+		user_message = message['user_message']
+
+		if (command == 'JOIN'):
+			self.user_list.add(user_name)
+
+		return {
+			'TALK' : str(dt.datetime.now()) + ' [' + user_name + ']: ' + user_message,
+			'JOIN' : str(dt.datetime.now()) + ' ' + user_name + ' has joined',
+			'LEAVE' : str(dt.datetime.now()) + ' ' + user_name + ' has left the chat'
+		}[command]
+
+### MAIN
 port = 10000
+ip = '255.255.255.255'
 
-threading.Thread(target=receiver, args=(port,)).start()
-
-threading.Thread(target=sender, args=('255.255.255.255', port)).start()
+sender = sender(ip, port)
+receiver = receiver(port)
+sender.start()
+receiver.start()
