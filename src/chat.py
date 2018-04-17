@@ -63,7 +63,7 @@ class sender(threading.Thread):
 
 	def ping(self, sock):
 		ping = sender.build_message('/ping')
-		sock.sendto(ping, (self.ip, self.port))
+		sock.sendto(ping.encode(), (self.ip, self.port))
 
 class receiver(threading.Thread):
 	def __init__(self, port):
