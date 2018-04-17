@@ -34,6 +34,9 @@ class sender(threading.Thread):
 
 					sock.sendto(message.encode(), server_address)
 					sock.sendto(quitting.encode(), ('localhost', port))
+				elif(user_message == '/who'):
+					message = json.dumps(sender.build_message(user_message))
+					sock.sendto(message.encode(), ('localhost', port))
 				else:
 					message = json.dumps(sender.build_message(user_message))
 
@@ -51,6 +54,8 @@ class sender(threading.Thread):
 			return {'user_name' : self.user_name, 'command' : 'JOIN', 'user_message' : ''}
 		elif(user_message == '/quit'):
 			return {'user_name' : self.user_name, 'command' : 'QUIT', 'user_message' : ''}
+		elif(user_message == '/who'):
+			return {'user_name' : self.user_name, 'command' : 'WHO', 'user_message' : ''}
 		else:
 			return {'user_name' : self.user_name, 'command' : 'TALK', 'user_message' : user_message}
 
@@ -87,6 +92,7 @@ class receiver(threading.Thread):
 		command = message['command']
 		user_name = message['user_name']
 		user_message = message['user_message']
+		separator = ', '
 
 		if (command == 'JOIN'):
 			self.user_list.add(user_name)
@@ -94,7 +100,8 @@ class receiver(threading.Thread):
 		return {
 			'TALK' : str(dt.datetime.now()) + ' [' + user_name + ']: ' + user_message,
 			'JOIN' : str(dt.datetime.now()) + ' ' + user_name + ' has joined',
-			'LEAVE' : str(dt.datetime.now()) + ' ' + user_name + ' has left the chat'
+			'LEAVE' : str(dt.datetime.now()) + ' ' + user_name + ' has left the chat',
+			'WHO' : str(dt.datetime.now()) + ' Connected users: ' + separator.join(self.user_list)
 		}[command]
 
 ### MAIN
