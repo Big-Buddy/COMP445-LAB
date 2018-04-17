@@ -89,7 +89,6 @@ class receiver(threading.Thread):
 				receiver.kill()
 			elif (message['command'] == 'PING'):
 				self.user_list.add(message['user_name'])
-				sender.ping(sock)
 			else:
 				print(receiver.parse_message(message))
 			
@@ -106,6 +105,7 @@ class receiver(threading.Thread):
 
 		if (command == 'JOIN'):
 			self.user_list.add(user_name)
+			sender.ping(sock)
 
 		return {
 			'TALK' : str(dt.datetime.now()) + ' [' + user_name + ']: ' + user_message,
