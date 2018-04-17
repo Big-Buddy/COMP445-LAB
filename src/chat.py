@@ -62,7 +62,7 @@ class sender(threading.Thread):
 			return {'user_name' : self.user_name, 'command' : 'TALK', 'user_message' : user_message}
 
 	def ping(self, sock):
-		ping = sender.build_message('/ping')
+		ping = json.dumps(sender.build_message('/ping'))
 		sock.sendto(ping.encode(), (self.ip, self.port))
 
 class receiver(threading.Thread):
