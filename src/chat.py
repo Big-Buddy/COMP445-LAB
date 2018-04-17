@@ -88,7 +88,6 @@ class receiver(threading.Thread):
 				receiver.kill()
 			elif (message['command'] == 'PING'):
 				self.user_list.add(message['user_name'])
-				sorted(self.user_list)
 			else:
 				print(receiver.parse_message(message, sock))
 			
