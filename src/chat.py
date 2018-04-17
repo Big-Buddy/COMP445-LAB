@@ -84,7 +84,6 @@ class receiver(threading.Thread):
 
 			if (message['command'] == 'QUIT'):
 				print('Bye!')
-				self.user_list.discard(message['user_name'])
 				sender.kill()
 				receiver.kill()
 			elif (message['command'] == 'PING'):
@@ -107,6 +106,9 @@ class receiver(threading.Thread):
 		if (command == 'JOIN'):
 			self.user_list.add(user_name)
 			sender.ping(sock)
+			sorted(self.user_list)
+		elif(command == 'LEAVE'):
+			self.user_list.discard(message['user_name'])
 
 		return {
 			'TALK' : str(dt.datetime.now()) + ' [' + user_name + ']: ' + user_message,
