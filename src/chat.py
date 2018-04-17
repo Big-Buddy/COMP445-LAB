@@ -90,14 +90,14 @@ class receiver(threading.Thread):
 			elif (message['command'] == 'PING'):
 				self.user_list.add(message['user_name'])
 			else:
-				print(receiver.parse_message(message))
+				print(receiver.parse_message(message, sock))
 			
 			time.sleep(0)
 
 	def kill(self):
 		self.running = 0
 
-	def parse_message(self, message):
+	def parse_message(self, message, sock):
 		command = message['command']
 		user_name = message['user_name']
 		user_message = message['user_message']
