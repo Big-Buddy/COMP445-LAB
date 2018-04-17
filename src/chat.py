@@ -84,10 +84,11 @@ class receiver(threading.Thread):
 
 			if (message['command'] == 'QUIT'):
 				print('Bye!')
+				self.user_list.discard(message['user_name'])
 				sender.kill()
 				receiver.kill()
 			elif (message['command'] == 'PING'):
-				self.users.add(message['user_name'])
+				self.user_list.add(message['user_name'])
 				sender.ping(sock)
 			else:
 				print(receiver.parse_message(message))
